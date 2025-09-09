@@ -1,0 +1,8 @@
+{
+  "input_type": "spectrogram",
+  "classification_head": "non-linear",
+  "cls_activation": "gelu",
+  "freeze_base_model": false,
+  "final_dropout": 0.1,
+  "num_labels": 2
+}
