@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="104a0d73-59b5-4e81-9eb7-f7ed25a100af" name="Changes" comment="Initial model.">
-      <change beforePath="$PROJECT_DIR$/.idea/InterpretableGenFM.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/InterpretableGenFM.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="104a0d73-59b5-4e81-9eb7-f7ed25a100af" name="Changes" comment="define loss function and dataset.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/dnabert2.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/dnabert2.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,11 +134,20 @@
       <option name="project" value="LOCAL" />
       <updated>1757455191810</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="define loss function and dataset.">
+      <option name="closed" value="true" />
+      <created>1757466552046</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1757466552046</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial model." />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial model." />
+    <MESSAGE value="define loss function and dataset." />
+    <option name="LAST_COMMIT_MESSAGE" value="define loss function and dataset." />
   </component>
 </project>

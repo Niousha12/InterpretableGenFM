@@ -14,7 +14,7 @@ class Passcode(Dataset):
     def __init__(self, csv_file_path, split='train', max_tokenize_length=512):
         self.df = pd.read_csv(csv_file_path)
 
-        self.classes = sorted(self.df.loc[self.df.split == "train", "label"].astype(str).unique())
+        self.classes = sorted(self.df.loc[self.df.split == "train", "label"].astype(str).unique(), reverse=True)
         self.label2id = {c: i for i, c in enumerate(self.classes)}
         self.id2label = {i: c for c, i in self.label2id.items()}
 
@@ -61,8 +61,8 @@ class Passcode(Dataset):
 
 
 if __name__ == '__main__':
-    train_dataset = Passcode(csv_file_path='dataset/cell_passport.csv', split='train')
-    test_dataset = Passcode(csv_file_path='dataset/cell_passport.csv', split='test')
+    train_dataset = Passcode(csv_file_path='dataset/cell_passport_sampled.csv', split='train')
+    test_dataset = Passcode(csv_file_path='dataset/cell_passport_sampled.csv', split='test')
 
     print(len(train_dataset))
     print(len(test_dataset))
