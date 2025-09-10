@@ -89,7 +89,17 @@ class FineTuneModel(nn.Module):
         return lengths.clamp(min=1).to(torch.float32)
 
     def forward(self, ref, alt, ref_att, alt_att, **hf_kwargs):
+        # 0. Move the inputs to the same device as the model
+        device = next(self.parameters()).device
+        ref = ref.to(device)
+        alt = alt.to(device)
+        ref_att = ref_att.to(device) if ref_att is not None else None
+        alt_att = alt_att.to(device) if alt_att is not None else None
+
         # 1. Base model forward → last hidden state (B, C, L, 768)
+
+
+
         base_out_ref = self.base_model(
             input_ids=ref,
             attention_mask=ref_att,
@@ -135,11 +145,11 @@ if __name__ == "__main__":
     model = FineTuneModel(config_).cuda()
 
     tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
-    ref = "ACGTAGCATCGGATCTATCTATCGACACTTGGTTATCGATCTACGAGCATCTCGTTAGC"
-    alt = "ACGTAGCATCGGATCTATCTATCGACACTTGGTTATCGATCTACGAGCATCTCGTTAGT"
+    ref_seq = "ACGTAGCATCGGATCTATCTATCGACACTTGGTTATCGATCTACGAGCATCTCGTTAGC"
+    alt_seq = "ACGTAGCATCGGATCTATCTATCGACACTTGGTTATCGATCTACGAGCATCTCGTTAGT"
 
-    tok_ref = tokenizer(ref, return_tensors='pt')
-    tok_alt = tokenizer(alt, return_tensors='pt')
+    tok_ref = tokenizer(ref_seq, return_tensors='pt')
+    tok_alt = tokenizer(alt_seq, return_tensors='pt')
 
     # concatenate the two tokenized sequences along the batch dimension
     # input_ids = torch.cat([tok_ref['input_ids'], tok_alt['input_ids']], dim=0)

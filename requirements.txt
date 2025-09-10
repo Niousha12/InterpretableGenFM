@@ -1,2 +1,5 @@
+tqdm
+numpy
 transformers
 torch
+pandas

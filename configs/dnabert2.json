@@ -4,5 +4,5 @@
   "cls_activation": "gelu",
   "freeze_base_model": false,
   "final_dropout": 0.1,
-  "num_labels": 2
+  "num_labels": 1
 }
