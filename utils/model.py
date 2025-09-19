@@ -1,7 +1,6 @@
-from transformers import AutoTokenizer, AutoModel, AutoConfig
-import torch.nn as nn
 import torch
-from torch.nn import GELU
+import torch.nn as nn
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 
 
 class ResidualBlock1D(nn.Module):
@@ -9,11 +8,8 @@ class ResidualBlock1D(nn.Module):
         super().__init__()
         self.kernel_size = kernel_size
         padding = (kernel_size - 1) // 2
-        self.net = nn.Sequential(
-            nn.Conv1d(channels, channels, kernel_size, padding=padding),
-            nn.GELU(),
-            nn.Conv1d(channels, channels, kernel_size, padding=padding),
-        )
+        self.net = nn.Sequential(nn.Conv1d(channels, channels, kernel_size, padding=padding), nn.GELU(),
+            nn.Conv1d(channels, channels, kernel_size, padding=padding), )
         self.norm = nn.LayerNorm(channels)
         self.dropout = nn.Dropout(dropout)
 
@@ -27,10 +23,7 @@ class ResidualBlock1D(nn.Module):
 class ResidualConvStack(nn.Module):
     def __init__(self, channels, num_layers=5, kernel_size=5, dropout=0.1):
         super().__init__()
-        self.layers = nn.ModuleList([
-            ResidualBlock1D(channels, kernel_size, dropout)
-            for _ in range(num_layers)
-        ])
+        self.layers = nn.ModuleList([ResidualBlock1D(channels, kernel_size, dropout) for _ in range(num_layers)])
 
     def forward(self, x):
         for layer in self.layers:
@@ -39,19 +32,17 @@ class ResidualConvStack(nn.Module):
 
 
 class FineTuneModel(nn.Module):
+    PRETRAINED_MODEL_NAME = "jaandoui/DNABERT2-AttentionExtracted"
 
     def __init__(self, config):
         super().__init__()
 
-        self.base_model = AutoModel.from_pretrained("jaandoui/DNABERT2-AttentionExtracted", trust_remote_code=True)
+        self.base_model = AutoModel.from_pretrained(self.PRETRAINED_MODEL_NAME, trust_remote_code=True)
 
         if config.freeze_base_model:
             self._freeze_parameters()
 
-        self.conv_layers = self.conv_layers = ResidualConvStack(768, num_layers=5,
-                                                                kernel_size=5, dropout=0.1)
-        # self.classifier = nn.Linear(768, config.num_labels)
-
+        self.conv_layers = self.conv_layers = ResidualConvStack(768, num_layers=5, kernel_size=5, dropout=0.1)
         if config.classification_head == "non-linear":
 
             act_cls_name = config.cls_activation.capitalize()
@@ -62,18 +53,12 @@ class FineTuneModel(nn.Module):
             except AttributeError:
                 raise ValueError(f"Activation '{config.cls_activation}' not found in torch.nn")
 
-            self.classification_head = nn.Sequential(
-                nn.Dropout(config.final_dropout),
-                nn.Linear(config.hidden_size, config.hidden_size),
-                activation,
-                nn.Dropout(config.final_dropout),
-                nn.Linear(config.hidden_size, config.num_labels)
-            )
+            self.classification_head = nn.Sequential(nn.Dropout(config.final_dropout),
+                nn.Linear(config.hidden_size, config.hidden_size), activation, nn.Dropout(config.final_dropout),
+                nn.Linear(config.hidden_size, config.num_labels))
         elif config.classification_head == "linear":
             self.classification_head = nn.Sequential(
-                nn.Linear(config.hidden_size, config.num_labels)
-            )
-        # self.gradient_checkpointing = False
+                nn.Linear(config.hidden_size, config.num_labels))  # self.gradient_checkpointing = False
 
     def _freeze_parameters(self):
         for param in self.base_model.parameters():
@@ -98,26 +83,12 @@ class FineTuneModel(nn.Module):
 
         # 1. Base model forward → last hidden state (B, C, L, 768)
 
-
-
-        base_out_ref = self.base_model(
-            input_ids=ref,
-            attention_mask=ref_att,
-            **hf_kwargs
-        )
-
-        base_out_alt = self.base_model(
-            input_ids=alt,
-            attention_mask=alt_att,
-            **hf_kwargs
-        )
+        base_out_ref = self.base_model(input_ids=ref, attention_mask=ref_att, **hf_kwargs)
+        ref_attentions_out = torch.stack(base_out_ref[3], dim=1)
+        base_out_alt = self.base_model(input_ids=alt, attention_mask=alt_att, **hf_kwargs)
+        alt_attentions_out = torch.stack(base_out_alt[3], dim=1)
 
         attention_mask = ref_att * alt_att
-
-        # x = base_out[0]  # (B, C, L, 768)
-
-        # delta = x[:, 0, :, :] - x[:, 1, :, :]  # (B, L, 768)
-        # x = delta.squeeze(1)  # (B, L, 768)
 
         delta = base_out_ref[0] - base_out_alt[0]
         x = delta.squeeze(1)
@@ -137,7 +108,7 @@ class FineTuneModel(nn.Module):
         # 4. Final Projection Layer
         pooled = self.classification_head(pooled)  # (B, num_labels)
 
-        return pooled  # (B, 768) features
+        return {"logits": pooled, "ref_attentions": ref_attentions_out, "alt_attentions": alt_attentions_out}
 
 
 if __name__ == "__main__":
@@ -151,21 +122,8 @@ if __name__ == "__main__":
     tok_ref = tokenizer(ref_seq, return_tensors='pt')
     tok_alt = tokenizer(alt_seq, return_tensors='pt')
 
-    # concatenate the two tokenized sequences along the batch dimension
-    # input_ids = torch.cat([tok_ref['input_ids'], tok_alt['input_ids']], dim=0)
-    # attention_mask = torch.cat([tok_ref['attention_mask'], tok_alt['attention_mask']], dim=0)
-
-    # input_ids = input_ids.unsqueeze(0)  # add batch dimension
-    # attention_mask = attention_mask.unsqueeze(0)  # add batch dimension
-
-    # input_ids = input_ids.cuda()
-    # attention_mask = attention_mask.cuda()
-
     # Forward pass through the model
     output = model(ref=tok_alt['input_ids'].cuda(), ref_att=tok_alt['attention_mask'].cuda(),
-                   alt=tok_ref['input_ids'].cuda(), alt_att=tok_ref['attention_mask'].cuda(),
-                   output_attentions=True, return_dict=True)
+                   alt=tok_ref['input_ids'].cuda(), alt_att=tok_ref['attention_mask'].cuda(), output_attentions=True,
+                   return_dict=True)
     print(output.shape)
-
-    # TODO: add dataloader and training loop
-    # wandb_logger = WandbLogger(name="test_run", project="test_project")
